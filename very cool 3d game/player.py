@@ -116,6 +116,8 @@ class Player:
         if self.model: self.model.removeNode()
 
     def update(self, task):
+        if self.health <= 0: return task.cont
+
         dt = globalClock.getDt()
         
         # Вращение камеры
