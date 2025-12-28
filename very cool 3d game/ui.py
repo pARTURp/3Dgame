@@ -8,6 +8,7 @@ class UIManager:
         self.main_menu_frame = None
         self.game_ui_frame = None
         self.book_frame = None
+        self.game_over_frame = None  # Добавлено для хранения окна смерти
         self.player_ref = None
         self.is_menu_open = False
         self.notification_label = None
@@ -18,6 +19,7 @@ class UIManager:
     def hide_all_menus(self):
         if self.main_menu_frame: self.main_menu_frame.hide()
         if self.book_frame: self.book_frame.hide()
+        if self.game_over_frame: self.game_over_frame.hide() # Скрываем окно смерти
         if self.game_ui_frame: self.game_ui_frame.show()
         self.is_menu_open = False
 
@@ -25,6 +27,7 @@ class UIManager:
         self.is_menu_open = True
         if self.game_ui_frame: self.game_ui_frame.hide()
         if self.main_menu_frame: self.main_menu_frame.destroy()
+        if self.game_over_frame: self.game_over_frame.destroy() # Удаляем окно смерти при переходе в меню
         
         self.main_menu_frame = DirectFrame(frameColor=(0, 0, 0, 1), frameSize=(-1, 1, -1, 1))
         DirectLabel(parent=self.main_menu_frame, text="THE VOID", scale=0.15, pos=(0, 0, 0.6), text_fg=(1, 1, 1, 1))
@@ -140,7 +143,7 @@ class UIManager:
         DirectLabel(parent=self.content_node, text="Mouse Sens", scale=0.05, pos=(-0.6, 0, 0.1), text_fg=(0,0,0,1))
         self.sens_slider = DirectSlider(parent=self.content_node, range=(0.05, 1.0), value=self.player_ref.mouse_sensitivity, pageSize=0.1, pos=(-0.6, 0, 0), scale=0.3, command=self.update_sens)
         
-        # --- НОВОЕ: Настройка FOV ---
+        # Настройка FOV
         DirectLabel(parent=self.content_node, text="FOV", scale=0.05, pos=(-0.6, 0, -0.1), text_fg=(0,0,0,1))
         current_fov = self.game.camLens.getFov()[0]
         self.fov_slider = DirectSlider(parent=self.content_node, range=(60, 110), value=current_fov, pageSize=5, pos=(-0.6, 0, -0.2), scale=0.3, command=self.update_fov)
@@ -151,14 +154,17 @@ class UIManager:
         if self.player_ref:
             self.player_ref.mouse_sensitivity = self.sens_slider['value']
 
-    # --- НОВОЕ: Метод обновления FOV ---
     def update_fov(self):
         if hasattr(self, 'fov_slider'):
             new_fov = self.fov_slider['value']
             self.game.camLens.setFov(new_fov)
 
     def show_game_over(self):
+        self.is_menu_open = True
         if self.game_ui_frame: self.game_ui_frame.hide()
-        f = DirectFrame(frameColor=(0, 0, 0, 0.8), frameSize=(-1, 1, -1, 1))
-        DirectLabel(parent=f, text="YOU DIED", scale=0.15, pos=(0, 0, 0.1), text_fg=(1, 0, 0, 1))
-        DirectButton(parent=f, text="Menu", scale=0.1, pos=(0, 0, -0.2), command=self.game.exit_to_menu)
+        if self.game_over_frame: self.game_over_frame.destroy()
+        
+        # Сохраняем окно в self, чтобы потом можно было удалить
+        self.game_over_frame = DirectFrame(frameColor=(0, 0, 0, 0.8), frameSize=(-1, 1, -1, 1))
+        DirectLabel(parent=self.game_over_frame, text="YOU DIED", scale=0.15, pos=(0, 0, 0.1), text_fg=(1, 0, 0, 1))
+        DirectButton(parent=self.game_over_frame, text="Menu", scale=0.1, pos=(0, 0, -0.2), command=self.game.exit_to_menu)
